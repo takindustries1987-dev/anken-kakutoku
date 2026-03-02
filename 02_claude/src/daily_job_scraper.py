@@ -321,6 +321,26 @@ def scrape_lancers() -> list:
                                     job_info["price"] = match.group(0)
                                     break
 
+                        # 締切（複数パターン対応）
+                        if page_text:
+                            deadline_patterns = [
+                                r'(?:応募期限|募集期限|期限)\s*[：:：]?\s*(\d{4}[年/.-]\d{1,2}[月/.-]\d{1,2}日?)',
+                                r'(?:掲載終了|終了日|〆切|締切|締め切り)\s*[：:：]?\s*(\d{4}[年/.-]\d{1,2}[月/.-]\d{1,2}日?)',
+                                r'(?:応募期限|募集期限|期限)\s*[：:：]?\s*(\d{1,2}[月/.-]\d{1,2}日?)',
+                            ]
+                            for dl_pat in deadline_patterns:
+                                dl_match = re.search(dl_pat, page_text)
+                                if dl_match:
+                                    job_info["deadline"] = dl_match.group(1)
+                                    break
+                            if not job_info["deadline"]:
+                                remaining_match = re.search(r'残り\s*(\d+)\s*日', page_text)
+                                if remaining_match:
+                                    days = int(remaining_match.group(1))
+                                    from datetime import timedelta
+                                    target = datetime.now() + timedelta(days=days)
+                                    job_info["deadline"] = f"{target.strftime('%Y/%m/%d')}（残り{days}日）"
+
                         all_jobs.append(job_info)
                         new += 1
 

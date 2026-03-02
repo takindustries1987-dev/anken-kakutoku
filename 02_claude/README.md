@@ -12,10 +12,12 @@
 │   ├── scrape_by_keyword.py        # CWキーワード検索スクレイピング
 │   ├── scrape_single_delivery.py   # 3PF統合 単発案件スクレイピング
 │   ├── coconala_analysis.py        # ココナラ成功者分析
-│   └── daily_job_scraper.py        # 毎日の新着・急募案件スクレイピング ★メイン
+│   ├── daily_job_scraper.py        # 毎日の新着・急募案件スクレイピング ★メイン
+│   └── lancers_deadline_checker.py # ランサーズ締切チェック＆案件一覧まとめ ★NEW
 ├── docs/                  ← ドキュメント（srcと1対1対応 + 手順書）
 │   ├── scrape_multi_category.md
 │   ├── daily_job_scraper.md
+│   ├── lancers_deadline_checker.md
 │   ├── gas_automation_sample.md
 │   ├── scraping_tool_sample.md
 │   ├── chatgpt_api_demo.md
@@ -66,6 +68,21 @@ python3 02_claude/src/scrape_single_delivery.py
 python3 02_claude/src/coconala_analysis.py
 ```
 
+### 6. ランサーズ締切チェック＆案件一覧まとめ
+```bash
+# 既存CSVの案件を一覧表示
+python3 02_claude/src/lancers_deadline_checker.py
+
+# 最新データ+締切情報を取得（Playwright必要）
+python3 02_claude/src/lancers_deadline_checker.py --scrape
+
+# 既存CSVの締切未取得案件だけ追加取得
+python3 02_claude/src/lancers_deadline_checker.py --enrich
+
+# 高額案件のみ（5万円以上）
+python3 02_claude/src/lancers_deadline_checker.py --min-price 50000
+```
+
 ## 出力先
 
 | ファイル | 内容 |
@@ -79,6 +96,7 @@ python3 02_claude/src/coconala_analysis.py
 | `10_raw/crowdworks_single_delivery.csv` | CW単発案件 |
 | `10_raw/coconala_requests.csv` | ココナラ公開依頼 |
 | `10_raw/lancers_jobs.csv` | ランサーズ案件 |
+| `10_raw/lancers_with_deadline.csv` | ランサーズ案件（締切・残日数付き） |
 | `10_raw/all_recommended_single.csv` | 3PF統合推奨 |
 | `10_raw/coconala_top_sellers.csv` | ココナラ売れ筋 |
 | `10_raw/coconala_analysis_report.txt` | ココナラ分析レポート |

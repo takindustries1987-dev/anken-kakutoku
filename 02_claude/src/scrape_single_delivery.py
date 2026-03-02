@@ -503,14 +503,39 @@ def scrape_lancers(headless: bool = True) -> list:
                                     job_info["price"] = match.group(0)
                                     break
 
-                        # 期限
+                        # 期限（複数パターン対応）
                         if page_text:
-                            deadline_match = re.search(
-                                r'(?:応募期限|募集期限|期限)\s*[：:]?\s*(\d{4}[年/]\d{1,2}[月/]\d{1,2}日?)',
-                                page_text
-                            )
-                            if deadline_match:
-                                job_info["deadline"] = deadline_match.group(1)
+                            deadline_patterns = [
+                                r'(?:応募期限|募集期限|期限)\s*[：:：]?\s*(\d{4}[年/.-]\d{1,2}[月/.-]\d{1,2}日?)',
+                                r'(?:掲載終了|終了日|〆切|締切|締め切り)\s*[：:：]?\s*(\d{4}[年/.-]\d{1,2}[月/.-]\d{1,2}日?)',
+                                r'(?:応募期限|募集期限|期限)\s*[：:：]?\s*(\d{1,2}[月/.-]\d{1,2}日?)',
+                            ]
+                            for dl_pat in deadline_patterns:
+                                deadline_match = re.search(dl_pat, page_text)
+                                if deadline_match:
+                                    job_info["deadline"] = deadline_match.group(1)
+                                    break
+                            # 「残り◯日」パターン
+                            if not job_info["deadline"]:
+                                remaining_match = re.search(r'残り\s*(\d+)\s*日', page_text)
+                                if remaining_match:
+                                    days = int(remaining_match.group(1))
+                                    from datetime import timedelta
+                                    target = datetime.now() + timedelta(days=days)
+                                    job_info["deadline"] = f"{target.strftime('%Y/%m/%d')}（残り{days}日）"
+                            # dt/dd構造（ランサーズのテーブル）
+                            if not job_info["deadline"]:
+                                try:
+                                    dt_elements = page.locator("dt").all()
+                                    for dt in dt_elements:
+                                        dt_text = dt.inner_text().strip()
+                                        if any(k in dt_text for k in ["期限", "期日", "終了", "掲載"]):
+                                            dd = dt.locator("+ dd").first
+                                            if dd.count() > 0:
+                                                job_info["deadline"] = dd.inner_text().strip()
+                                                break
+                                except Exception:
+                                    pass
 
                         # 応募者数
                         if page_text:
