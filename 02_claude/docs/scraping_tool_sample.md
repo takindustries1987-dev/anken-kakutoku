@@ -1,0 +1,36 @@
+# scraping_tool_sample.py ドキュメント
+
+## 概要
+ポートフォリオ用汎用Webスクレイピングツール。設定を変えるだけで様々なサイトのデータを自動収集できる。
+
+## インプット
+
+| パラメータ | 型 | 説明 |
+|---|---|---|
+| `ScrapingConfig.target_url` | str | スクレイピング対象URL |
+| `ScrapingConfig.selectors` | dict | フィールド名→CSSセレクタの辞書 |
+| `ScrapingConfig.item_container_selector` | str | アイテムコンテナのセレクタ |
+| `ScrapingConfig.next_page_selector` | str | 次ページリンクのセレクタ |
+| `ScrapingConfig.max_pages` | int | 最大ページ数（デフォルト: 10） |
+| `ScrapingConfig.delay_seconds` | float | リクエスト間隔（デフォルト: 2.0秒） |
+| `ScrapingConfig.output_format` | str | csv / json / excel |
+
+## アウトプット
+
+| ファイル | 説明 |
+|---|---|
+| `output/scraped_data_TIMESTAMP.csv` | 収集データ（CSV） |
+| `output/scraped_data_TIMESTAMP.json` | 収集データ（JSON） |
+| `output/scraped_data_TIMESTAMP.xlsx` | 収集データ（Excel） |
+| `logs/scraping.log` | 実行ログ |
+
+## 主要クラス・関数
+
+| クラス/関数 | 説明 |
+|---|---|
+| `WebScraper` | メインスクレイパークラス |
+| `WebScraper.scrape()` | スクレイピング実行 |
+| `WebScraper.save_results()` | 結果保存 |
+| `ScrapingConfig` | 設定データクラス |
+| `example_news_scraping()` | ニュースサイト使用例 |
+| `example_ec_scraping()` | ECサイト使用例 |
