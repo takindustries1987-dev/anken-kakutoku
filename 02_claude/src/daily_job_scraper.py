@@ -2,7 +2,7 @@
 毎日の新着案件スクレイピング + 急募案件フィルタリングスクリプト
 
 【使用方法】
-cd ~/Desktop/自己開発/案件獲得
+cd ~/Desktop/Tools/案件獲得
 python3 02_claude/src/daily_job_scraper.py
 
 # 急募案件のみ表示
@@ -31,8 +31,8 @@ python3 02_claude/src/daily_job_scraper.py --lancers-only
 - フィルタ条件（最低報酬額、AIスコア閾値）
 
 【アウトプット】
-- 10_raw/daily_jobs_YYYYMMDD.csv: 当日取得した全案件
-- 10_raw/daily_recommended_YYYYMMDD.csv: 推奨案件
+- 10_raw/毎日_全案件_YYYYMMDD.csv: 当日取得した全案件
+- 10_raw/毎日_おすすめ_YYYYMMDD.csv: 推奨案件
 - コンソールに案件サマリー表示
 """
 
@@ -105,6 +105,37 @@ def parse_price_to_yen(price_str: str) -> int:
     if num_match:
         return int(num_match.group(1).replace(",", ""))
     return 0
+
+
+def has_ai_ban(job: dict) -> bool:
+    """案件説明文にAI利用禁止の記載があるかどうかを判定"""
+    title = (job.get("title", "") or "")
+    desc = (job.get("description", "") or "")
+    combined = (title + " " + desc).lower()
+
+    ban_phrases = [
+        "aiの使用は禁止",
+        "ai 使用は禁止",
+        "ai使用禁止",
+        "ai ツールの使用は禁止",
+        "ai ツールは使用禁止",
+        "aiツールの利用禁止",
+        "生成aiの利用禁止",
+        "生成ai 使用禁止",
+        "chatgptの使用は禁止",
+        "chatgpt 使用は禁止",
+        "chatgpt使用禁止",
+        "aiを使った執筆は禁止",
+        "aiを使ったライティングは禁止",
+        "aiによる執筆は禁止",
+        "aiによるライティングは禁止",
+        "no ai tools",
+        "ai tools not allowed",
+        "do not use ai",
+        "ai-generated content is not allowed",
+    ]
+
+    return any(phrase in combined for phrase in ban_phrases)
 
 
 def is_urgent(job: dict) -> bool:
@@ -213,6 +244,8 @@ def scrape_crowdworks() -> list:
                     for job in jobs:
                         job_url = job.get("url", "")
                         if job_url not in seen_urls:
+                            if has_ai_ban(job):
+                                continue
                             seen_urls.add(job_url)
                             job["platform"] = "CrowdWorks"
                             job["search_keyword"] = keyword
@@ -341,6 +374,9 @@ def scrape_lancers() -> list:
                                     target = datetime.now() + timedelta(days=days)
                                     job_info["deadline"] = f"{target.strftime('%Y/%m/%d')}（残り{days}日）"
 
+                        if has_ai_ban(job_info):
+                            continue
+
                         all_jobs.append(job_info)
                         new += 1
 
@@ -364,6 +400,8 @@ def analyze_and_rank(jobs: list, urgent_only: bool = False) -> list:
         if not is_single_delivery(job):
             continue
         if urgent_only and not is_urgent(job):
+            continue
+        if has_ai_ban(job):
             continue
 
         price = parse_price_to_yen(job.get("price", ""))
@@ -397,22 +435,33 @@ def save_results(all_jobs: list, recommended: list):
     ]
 
     # 全案件CSV
-    all_csv = output_dir / f"daily_jobs_{TODAY}.csv"
+    all_csv = output_dir / f"毎日_全案件_{TODAY}.csv"
     with open(all_csv, "w", newline="", encoding="utf-8-sig") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
         writer.writeheader()
         for job in all_jobs:
-            writer.writerow(job)
+            row = dict(job)
+            desc = row.get("description")
+            if desc:
+                # 改行をスペースに潰し、概要を短くまとめる
+                clean = " ".join(desc.split())
+                row["description"] = clean[:100]
+            writer.writerow(row)
     print(f"\n全案件CSV: {all_csv} ({len(all_jobs)}件)")
 
     # 推奨案件CSV
     rec_fields = fieldnames + ["price_yen", "ai_score", "ai_reasons", "is_urgent"]
-    rec_csv = output_dir / f"daily_recommended_{TODAY}.csv"
+    rec_csv = output_dir / f"毎日_おすすめ_{TODAY}.csv"
     with open(rec_csv, "w", newline="", encoding="utf-8-sig") as f:
         writer = csv.DictWriter(f, fieldnames=rec_fields, extrasaction="ignore")
         writer.writeheader()
         for job in recommended:
-            writer.writerow(job)
+            row = dict(job)
+            desc = row.get("description")
+            if desc:
+                clean = " ".join(desc.split())
+                row["description"] = clean[:100]
+            writer.writerow(row)
     print(f"推奨案件CSV: {rec_csv} ({len(recommended)}件)")
 
 

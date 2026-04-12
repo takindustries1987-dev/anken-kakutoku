@@ -2,15 +2,15 @@
 ランサーズ案件 締切情報取得 & 案件一覧まとめ
 
 【使用方法】
-cd ~/Desktop/自己開発/案件獲得
+cd ~/Desktop/Tools/案件獲得
 python3 02_claude/src/lancers_deadline_checker.py
 
 オプション:
   --scrape       : ランサーズから最新データを再取得（Playwright必要）
   --min-price N  : 最低報酬額（デフォルト: 5000円）
   --top N        : 上位N件表示（デフォルト: 全件）
-  --csv FILE     : 入力CSVファイルパス（デフォルト: 10_raw/lancers_jobs.csv）
-  --output FILE  : 出力CSVファイルパス（デフォルト: 10_raw/lancers_with_deadline.csv）
+  --csv FILE     : 入力CSVファイルパス（デフォルト: 10_raw/ランサーズ_案件一覧.csv）
+  --output FILE  : 出力CSVファイルパス（デフォルト: 10_raw/ランサーズ_案件_締切付き.csv）
 
 【処理内容】
 1. 既存CSVまたはランサーズサイトから案件データを読み込み
@@ -19,11 +19,11 @@ python3 02_claude/src/lancers_deadline_checker.py
 4. 締切が近い順にソートしてCSV保存
 
 【インプット】
-- 10_raw/lancers_jobs.csv（既存の案件データ）
+- 10_raw/ランサーズ_案件一覧.csv（既存の案件データ）
 - または --scrape でランサーズから直接取得
 
 【アウトプット】
-- 10_raw/lancers_with_deadline.csv（締切情報付き案件一覧）
+- 10_raw/ランサーズ_案件_締切付き.csv（締切情報付き案件一覧）
 - コンソールに案件一覧テーブル表示
 """
 
@@ -164,6 +164,33 @@ def extract_deadline_from_page(page, page_text: str) -> str:
     return deadline.strip()
 
 
+def has_ai_ban_text(text: str) -> bool:
+    """テキスト中にAI利用禁止の記載があるかどうかを判定"""
+    lowered = text.lower()
+    ban_phrases = [
+        "aiの使用は禁止",
+        "ai 使用は禁止",
+        "ai使用禁止",
+        "ai ツールの使用は禁止",
+        "ai ツールは使用禁止",
+        "aiツールの利用禁止",
+        "生成aiの利用禁止",
+        "生成ai 使用禁止",
+        "chatgptの使用は禁止",
+        "chatgpt 使用は禁止",
+        "chatgpt使用禁止",
+        "aiを使った執筆は禁止",
+        "aiを使ったライティングは禁止",
+        "aiによる執筆は禁止",
+        "aiによるライティングは禁止",
+        "no ai tools",
+        "ai tools not allowed",
+        "do not use ai",
+        "ai-generated content is not allowed",
+    ]
+    return any(phrase in lowered for phrase in ban_phrases)
+
+
 def extract_price_from_page(page_text: str) -> str:
     """詳細ページから正確な報酬を抽出"""
     price_patterns = [
@@ -302,6 +329,10 @@ def scrape_lancers_with_deadline(headless: bool = True) -> list:
                                 continue
                         if not job_info["description"] and page_text:
                             job_info["description"] = page_text[:2000]
+
+                        if job_info["description"] and has_ai_ban_text(job_info["description"]):
+                            print("AI利用禁止案件のためスキップ")
+                            continue
 
                         # 価格（改良版）
                         if page_text:
@@ -567,7 +598,12 @@ def save_csv(jobs: list, output_path: str):
         )
         writer.writeheader()
         for job in jobs:
-            writer.writerow(job)
+            row = dict(job)
+            desc = row.get("description")
+            if desc:
+                clean = " ".join(desc.split())
+                row["description"] = clean[:100]
+            writer.writerow(row)
 
     print(f"\nCSV保存: {output_path} ({len(jobs)}件)")
 

@@ -2,7 +2,7 @@
 CrowdWorks キーワード検索＆案件精査スクリプト
 
 【使用方法】
-cd ~/Desktop/自己開発/案件獲得
+cd ~/Desktop/Tools/案件獲得
 python3 02_claude/src/scrape_by_keyword.py
 
 【処理内容】
@@ -15,8 +15,8 @@ python3 02_claude/src/scrape_by_keyword.py
 - 有効なカテゴリURL（VALID_CATEGORIES）
 
 【アウトプット】
-- 10_raw/crowdworks_keyword_search.csv: 全案件データ
-- 10_raw/crowdworks_ai_recommended.csv: AI納品可能な推奨案件
+- 10_raw/CW_キーワード検索.csv: 全案件データ
+- 10_raw/CW_AI推奨案件.csv: AI納品可能な推奨案件
 """
 
 import sys
@@ -77,6 +77,37 @@ def parse_price_to_yen(price_str: str) -> int:
     if num_match:
         return int(num_match.group(1).replace(",", ""))
     return 0
+
+
+def has_ai_ban(job: dict) -> bool:
+    """案件説明文にAI利用禁止の記載があるかどうかを判定"""
+    title = (job.get("title", "") or "")
+    desc = (job.get("description", "") or "")
+    combined = (title + " " + desc).lower()
+
+    ban_phrases = [
+        "aiの使用は禁止",
+        "ai 使用は禁止",
+        "ai使用禁止",
+        "ai ツールの使用は禁止",
+        "ai ツールは使用禁止",
+        "aiツールの利用禁止",
+        "生成aiの利用禁止",
+        "生成ai 使用禁止",
+        "chatgptの使用は禁止",
+        "chatgpt 使用は禁止",
+        "chatgpt使用禁止",
+        "aiを使った執筆は禁止",
+        "aiを使ったライティングは禁止",
+        "aiによる執筆は禁止",
+        "aiによるライティングは禁止",
+        "no ai tools",
+        "ai tools not allowed",
+        "do not use ai",
+        "ai-generated content is not allowed",
+    ]
+
+    return any(phrase in combined for phrase in ban_phrases)
 
 
 def is_ai_deliverable(job: dict) -> tuple:
@@ -168,11 +199,14 @@ def main():
                     new_count = 0
                     for job in jobs:
                         job_url = job.get("url", "")
-                        if job_url not in seen_urls:
-                            seen_urls.add(job_url)
-                            job["search_keyword"] = keyword
-                            all_jobs.append(job)
-                            new_count += 1
+                        if job_url in seen_urls:
+                            continue
+                        if has_ai_ban(job):
+                            continue
+                        seen_urls.add(job_url)
+                        job["search_keyword"] = keyword
+                        all_jobs.append(job)
+                        new_count += 1
                     print(f"  -> {len(jobs)}件取得 ({new_count}件新規)")
                 except Exception as e:
                     print(f"  -> エラー: {e}")
@@ -211,7 +245,7 @@ def main():
         return
 
     # CSV出力
-    output_csv = project_root / "10_raw" / "crowdworks_keyword_search.csv"
+    output_csv = project_root / "10_raw" / "CW_キーワード検索.csv"
     output_csv.parent.mkdir(parents=True, exist_ok=True)
 
     fieldnames = [
@@ -223,7 +257,12 @@ def main():
         writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
         writer.writeheader()
         for job in all_jobs:
-            writer.writerow(job)
+            row = dict(job)
+            desc = row.get("description")
+            if desc:
+                clean = " ".join(desc.split())
+                row["description"] = clean[:100]
+            writer.writerow(row)
     print(f"\n全案件CSV: {output_csv}")
     print(f"合計: {len(all_jobs)}件")
 
@@ -260,13 +299,18 @@ def main():
                 print(f"  概要: {desc[:200]}...")
 
         # 推奨CSV
-        rec_csv = project_root / "10_raw" / "crowdworks_ai_recommended.csv"
+        rec_csv = project_root / "10_raw" / "CW_AI推奨案件.csv"
         rec_fields = fieldnames + ["ai_score", "ai_reason", "price_yen"]
         with open(rec_csv, "w", newline="", encoding="utf-8-sig") as f:
             writer = csv.DictWriter(f, fieldnames=rec_fields, extrasaction="ignore")
             writer.writeheader()
             for job in deliverable:
-                writer.writerow(job)
+                row = dict(job)
+                desc = row.get("description")
+                if desc:
+                    clean = " ".join(desc.split())
+                    row["description"] = clean[:100]
+                writer.writerow(row)
         print(f"\n推奨案件CSV: {rec_csv}")
 
         # 50万円プラン

@@ -12,6 +12,9 @@ CrowdWorksの複数カテゴリから案件情報を一括取得し、AI(Claude)
 - `10_raw/crowdworks_recommended.csv`: AI納品可能と判定された推奨案件
 - コンソール出力: 案件サマリー、50万円達成提案
 
+### CSV列（共通）
+- `description`: 案件概要（改行除去済み・先頭100文字のみ）
+
 ## 主要関数
 
 ### `parse_price_to_yen(price_str: str) -> int`
@@ -24,6 +27,11 @@ CrowdWorksの複数カテゴリから案件情報を一括取得し、AI(Claude)
   - `is_deliverable`: AI納品可能か
   - `reason`: 判定理由
   - `score`: 優先度スコア（高いほど推奨）
+
+### AI利用禁止案件のフィルタ
+- 案件タイトル・説明文に以下のような文言が含まれる場合は、スクレイピング結果から除外される
+  - 「AIの使用は禁止」「AI使用禁止」
+  - 「ChatGPTの使用は禁止」「生成AIの利用禁止」 等
 
 ### `main()`
 - メイン処理。カテゴリ一括スクレイピング → フィルタリング → CSV出力 → 提案表示

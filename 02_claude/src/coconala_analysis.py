@@ -2,7 +2,7 @@
 ココナラ成功者プロフィール・需要分析スクリプト
 
 【使用方法】
-cd ~/Desktop/自己開発/案件獲得
+cd ~/Desktop/Tools/案件獲得
 python3 02_claude/src/coconala_analysis.py
 
 【処理内容】
@@ -16,8 +16,8 @@ python3 02_claude/src/coconala_analysis.py
 - 各サービスの詳細ページ
 
 【アウトプット】
-- 10_raw/coconala_top_sellers.csv: 売れ筋出品者データ
-- 10_raw/coconala_analysis_report.txt: 分析レポート
+- 10_raw/ココナラ_売れ筋出品者.csv: 売れ筋出品者データ
+- 10_raw/ココナラ_成功者分析レポート.txt: 分析レポート
 """
 
 import sys
@@ -258,7 +258,7 @@ def analyze_results(services: list):
         "seller_rank", "review_count", "review_score", "sales_count",
         "delivery_days", "url", "description", "seller_profile"
     ]
-    with open(output_dir / "coconala_top_sellers.csv", "w", newline="", encoding="utf-8-sig") as f:
+    with open(output_dir / "ココナラ_売れ筋出品者.csv", "w", newline="", encoding="utf-8-sig") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
         writer.writeheader()
         for svc in services:
@@ -356,7 +356,7 @@ def analyze_results(services: list):
     print(report_text)
 
     # レポートファイル保存
-    with open(output_dir / "coconala_analysis_report.txt", "w", encoding="utf-8") as f:
+    with open(output_dir / "ココナラ_成功者分析レポート.txt", "w", encoding="utf-8") as f:
         f.write(report_text)
 
     print(f"\n\nCSV: {output_dir / 'coconala_top_sellers.csv'}")

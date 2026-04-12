@@ -2,7 +2,7 @@
 CrowdWorks + ココナラ + ランサーズ 単発納品案件スクレイピング
 
 【使用方法】
-cd ~/Desktop/自己開発/案件獲得
+cd ~/Desktop/Tools/案件獲得
 python3 02_claude/src/scrape_single_delivery.py
 
 【処理内容】
@@ -17,10 +17,10 @@ python3 02_claude/src/scrape_single_delivery.py
 - ランサーズ検索キーワード
 
 【アウトプット】
-- 10_raw/crowdworks_single_delivery.csv
-- 10_raw/coconala_requests.csv
-- 10_raw/lancers_jobs.csv
-- 10_raw/all_recommended_single.csv（統合推奨リスト）
+- 10_raw/CW_単発案件.csv
+- 10_raw/ココナラ_公開依頼.csv
+- 10_raw/ランサーズ_案件一覧.csv
+- 10_raw/3PF統合_おすすめ案件.csv（統合推奨リスト）
 """
 
 import sys
@@ -642,21 +642,21 @@ def main():
     ]
 
     if all_cw_jobs:
-        with open(output_dir / "crowdworks_single_delivery.csv", "w", newline="", encoding="utf-8-sig") as f:
+        with open(output_dir / "CW_単発案件.csv", "w", newline="", encoding="utf-8-sig") as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
             writer.writeheader()
             for job in all_cw_jobs:
                 writer.writerow(job)
 
     if all_coconala:
-        with open(output_dir / "coconala_requests.csv", "w", newline="", encoding="utf-8-sig") as f:
+        with open(output_dir / "ココナラ_公開依頼.csv", "w", newline="", encoding="utf-8-sig") as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
             writer.writeheader()
             for job in all_coconala:
                 writer.writerow(job)
 
     if all_lancers:
-        with open(output_dir / "lancers_jobs.csv", "w", newline="", encoding="utf-8-sig") as f:
+        with open(output_dir / "ランサーズ_案件一覧.csv", "w", newline="", encoding="utf-8-sig") as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
             writer.writeheader()
             for job in all_lancers:
@@ -714,7 +714,7 @@ def main():
 
         # 推奨CSV
         rec_fields = fieldnames + ["ai_score", "ai_reason", "price_yen"]
-        with open(output_dir / "all_recommended_single.csv", "w", newline="", encoding="utf-8-sig") as f:
+        with open(output_dir / "3PF統合_おすすめ案件.csv", "w", newline="", encoding="utf-8-sig") as f:
             writer = csv.DictWriter(f, fieldnames=rec_fields, extrasaction="ignore")
             writer.writeheader()
             for job in deliverable:

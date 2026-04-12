@@ -2,7 +2,7 @@
 CrowdWorks 複数カテゴリ一括スクレイピング＆案件精査スクリプト
 
 【使用方法】
-cd ~/Desktop/自己開発/案件獲得
+cd ~/Desktop/Tools/案件獲得
 python 02_claude/src/scrape_multi_category.py
 
 【処理内容】
@@ -16,7 +16,7 @@ python 02_claude/src/scrape_multi_category.py
 - max_jobs_per_category: カテゴリごとの最大取得件数（デフォルト10）
 
 【アウトプット】
-- 10_raw/crowdworks_multi_category.csv: 全案件データ
+- 10_raw/CW_カテゴリ別案件.csv: 全案件データ
 - コンソールに案件サマリー表示
 """
 
@@ -75,6 +75,37 @@ def parse_price_to_yen(price_str: str) -> int:
         return int(num_match.group(1).replace(",", ""))
 
     return 0
+
+
+def has_ai_ban(job: dict) -> bool:
+    """案件説明文にAI利用禁止の記載があるかどうかを判定"""
+    title = (job.get("title", "") or "")
+    desc = (job.get("description", "") or "")
+    combined = (title + " " + desc).lower()
+
+    ban_phrases = [
+        "aiの使用は禁止",
+        "ai 使用は禁止",
+        "ai使用禁止",
+        "ai ツールの使用は禁止",
+        "ai ツールは使用禁止",
+        "aiツールの利用禁止",
+        "生成aiの利用禁止",
+        "生成ai 使用禁止",
+        "chatgptの使用は禁止",
+        "chatgpt 使用は禁止",
+        "chatgpt使用禁止",
+        "aiを使った執筆は禁止",
+        "aiを使ったライティングは禁止",
+        "aiによる執筆は禁止",
+        "aiによるライティングは禁止",
+        "no ai tools",
+        "ai tools not allowed",
+        "do not use ai",
+        "ai-generated content is not allowed",
+    ]
+
+    return any(phrase in combined for phrase in ban_phrases)
 
 
 def is_ai_deliverable(job: dict) -> tuple[bool, str, int]:
@@ -256,6 +287,8 @@ def main():
                     )
 
                     for job in jobs:
+                        if has_ai_ban(job):
+                            continue
                         job["search_category"] = cat_name
                         all_jobs.append(job)
 
@@ -275,7 +308,7 @@ def main():
         return
 
     # CSVに保存
-    output_csv = project_root / "10_raw" / "crowdworks_multi_category.csv"
+    output_csv = project_root / "10_raw" / "CW_カテゴリ別案件.csv"
     output_csv.parent.mkdir(parents=True, exist_ok=True)
 
     # raw_htmlを除外してCSV出力
@@ -289,7 +322,12 @@ def main():
         writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
         writer.writeheader()
         for job in all_jobs:
-            writer.writerow(job)
+            row = dict(job)
+            desc = row.get("description")
+            if desc:
+                clean = " ".join(desc.split())
+                row["description"] = clean[:100]
+            writer.writerow(row)
 
     print(f"\n全案件をCSVに保存しました: {output_csv}")
     print(f"合計取得件数: {len(all_jobs)}")
@@ -333,13 +371,18 @@ def main():
                 print(f"  概要: {desc[:150]}...")
 
         # 推奨案件CSV出力
-        recommended_csv = project_root / "10_raw" / "crowdworks_recommended.csv"
+        recommended_csv = project_root / "10_raw" / "CW_おすすめ案件.csv"
         rec_fields = fieldnames + ["ai_score", "ai_reason", "price_yen"]
         with open(recommended_csv, "w", newline="", encoding="utf-8-sig") as f:
             writer = csv.DictWriter(f, fieldnames=rec_fields, extrasaction="ignore")
             writer.writeheader()
             for job in deliverable_jobs:
-                writer.writerow(job)
+                row = dict(job)
+                desc = row.get("description")
+                if desc:
+                    clean = " ".join(desc.split())
+                    row["description"] = clean[:100]
+                writer.writerow(row)
         print(f"\n推奨案件をCSVに保存: {recommended_csv}")
 
         # 50万円達成のための提案
