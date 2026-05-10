@@ -1,0 +1,94 @@
+{
+  "generated_at": "2026-05-11T07:07:41",
+  "source_csv": "10_raw/毎日_全案件_20260511.csv",
+  "settings": {
+    "max_count": 5,
+    "intent": "AI・DX・業務改善寄りで探して",
+    "exclude_keywords": [
+      "SEO",
+      "デザイナー",
+      "ライター"
+    ],
+    "min_price_yen": 500000,
+    "max_workload": "週2日",
+    "remote_required": true,
+    "platforms": {
+      "復業クラウド": true,
+      "Wantedly": true,
+      "SOKUDAN": true,
+      "Workship": true,
+      "ココナラ": true,
+      "ランサーズ": true,
+      "crowdworks": true,
+      "YOUTRUST": true
+    },
+    "mvp_platforms": [
+      "ランサーズ",
+      "crowdworks"
+    ]
+  },
+  "candidate_count": 75,
+  "top_n": 5,
+  "jobs": [
+    {
+      "platform": "CrowdWorks",
+      "search_keyword": "急募 開発",
+      "title": "【急募/相見積もり】AIマッチング搭載・就活イベント運営システムの開発見積書作成（概要書あり）法人限定",
+      "price": "1,000,000円",
+      "deadline": "2026年05月14日",
+      "category": "サイト構築・ウェブ開発",
+      "applicants": "51人",
+      "url": "https://crowdworks.jp/public/jobs/13093291",
+      "description": "【急募/相見積もり】AIマッチング搭載・就活イベント運営システムの開発見積書作成（概要書あり）法人限定 サイト構築・ウェブ開発の仕事の依頼 taka1130 (8件のレビュー) 本人確認未提出 発注ル",
+      "price_yen": 1000000
+    },
+    {
+      "platform": "CrowdWorks",
+      "search_keyword": "スクレイピング",
+      "title": "【高単価／案件選択可】SESエンジニア募集｜Web・インフラ・AI案件多数",
+      "price": "500,000円",
+      "deadline": "2026年05月19日",
+      "category": "業務システム・ソフトウェア",
+      "applicants": "40人",
+      "url": "https://crowdworks.jp/public/jobs/13063134",
+      "description": "【高単価／案件選択可】SESエンジニア募集｜Web・インフラ・AI案件多数 業務システム・ソフトウェアの仕事の依頼 HRバンク＠採用担当 (0件のレビュー) 本人確認未提出 発注ルールチェック未回答 ",
+      "price_yen": 500000
+    },
+    {
+      "platform": "CrowdWorks",
+      "search_keyword": "自動化ツール",
+      "title": "【オンライン商談同席】AutoCAD用設計業務自動化ツールの開発プロジェクト",
+      "price": "500,000円",
+      "deadline": "2026年05月11日",
+      "category": "業務システム・ソフトウェア",
+      "applicants": "13人",
+      "url": "https://crowdworks.jp/public/jobs/13088759",
+      "description": "【オンライン商談同席】AutoCAD用設計業務自動化ツールの開発プロジェクト 業務システム・ソフトウェアの仕事の依頼 Yoshida_Tech (1件のレビュー) 本人確認未提出 発注ルールチェック未",
+      "price_yen": 500000
+    },
+    {
+      "platform": "CrowdWorks",
+      "search_keyword": "Python",
+      "title": "ナレッジ基盤機能拡張/次世代開発プロセス支援ツール展開",
+      "price": "500,000円",
+      "deadline": "2026年05月21日",
+      "category": "プロジェクトマネジメント・要件定義",
+      "applicants": "28人",
+      "url": "https://crowdworks.jp/public/jobs/13004927",
+      "description": "ナレッジ基盤機能拡張/次世代開発プロセス支援ツール展開 プロジェクトマネジメント・要件定義の仕事の依頼 Walk To See (35件のレビュー) 本人確認済み 発注ルールチェック済み 仕事の概要 ",
+      "price_yen": 500000
+    },
+    {
+      "platform": "CrowdWorks",
+      "search_keyword": "bot 開発",
+      "title": "【10人月以上の統括必須】進行管理だけのPMから脱却。生成AI×GASで組織DXを牽引する次世代コア",
+      "price": "500,000円",
+      "deadline": "2026年05月11日",
+      "category": "経営戦略・経営コンサルティング",
+      "applicants": "4人",
+      "url": "https://crowdworks.jp/public/jobs/13102019",
+      "description": "【10人月以上の統括必須】進行管理だけのPMから脱却。生成AI×GASで組織DXを牽引する次世代コア 経営戦略・経営コンサルティングの仕事の依頼 NextGen_AI (0件のレビュー) 本人確認未提",
+      "price_yen": 500000
+    }
+  ]
+}
