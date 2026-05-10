@@ -1,15 +1,13 @@
 {
-  "generated_at": "2026-05-11T07:07:41",
+  "generated_at": "2026-05-11T08:28:39",
   "source_csv": "10_raw/毎日_全案件_20260511.csv",
   "settings": {
-    "max_count": 5,
-    "intent": "AI・DX・業務改善寄りで探して",
+    "max_count": 10,
+    "intent": "スクレイピング・自動化・AI・DX・業務改善寄りで探して",
     "exclude_keywords": [
-      "SEO",
-      "デザイナー",
-      "ライター"
+      "除外条件"
     ],
-    "min_price_yen": 500000,
+    "min_price_yen": 50000,
     "max_workload": "週2日",
     "remote_required": true,
     "platforms": {
@@ -27,8 +25,8 @@
       "crowdworks"
     ]
   },
-  "candidate_count": 75,
-  "top_n": 5,
+  "candidate_count": 78,
+  "top_n": 10,
   "jobs": [
     {
       "platform": "CrowdWorks",
@@ -89,6 +87,66 @@
       "url": "https://crowdworks.jp/public/jobs/13102019",
       "description": "【10人月以上の統括必須】進行管理だけのPMから脱却。生成AI×GASで組織DXを牽引する次世代コア 経営戦略・経営コンサルティングの仕事の依頼 NextGen_AI (0件のレビュー) 本人確認未提",
       "price_yen": 500000
+    },
+    {
+      "platform": "ランサーズ",
+      "search_keyword": "GAS スプレッドシート",
+      "title": "【10人月以上の統括必須】進行管理だけのPMから脱却。生成AI×GASで組織DXを牽引する次世代コアの仕事 [IT・通信・インターネット]",
+      "price": "500,000円",
+      "deadline": "",
+      "category": "",
+      "applicants": "",
+      "url": "https://www.lancers.jp/work/detail/5537331",
+      "description": "システムエンジニア歴3年、 プロダクトの検証業務やインフラ構築などを経験しました。 またその過程でAIの事務や... もっと見る",
+      "price_yen": 500000
+    },
+    {
+      "platform": "ランサーズ",
+      "search_keyword": "スクレイピング",
+      "title": "日本のトレカショップの買取価格を比較できるウェブサイトの仕事 [卸売・小売]",
+      "price": "500,000円",
+      "deadline": "",
+      "category": "",
+      "applicants": "",
+      "url": "https://www.lancers.jp/work/detail/5536229",
+      "description": "クラウドソーシング ランサーズ 仕事を探す AI・システム開発・運用の仕事 Web・システム開発の仕事 Webシステム開発・プログラミングの仕事 日本のトレカショップの買取価格を比較できるウェブサイト",
+      "price_yen": 500000
+    },
+    {
+      "platform": "ランサーズ",
+      "search_keyword": "AI ツール",
+      "title": "【オンライン商談同席】プロジェクト管理ツールの刷新プロジェクトの仕事 [IT・通信・インターネット]",
+      "price": "500,000円",
+      "deadline": "",
+      "category": "",
+      "applicants": "",
+      "url": "https://www.lancers.jp/work/detail/5539812",
+      "description": "業務のお困りごとを、AIとコードで解決するエンジニアです。 楽天株式会社でWebプロデューサー・ディレクターを7... もっと見る",
+      "price_yen": 500000
+    },
+    {
+      "platform": "ランサーズ",
+      "search_keyword": "AI ツール",
+      "title": "【オンライン商談同席】webアンケートツールの導入支援の仕事 [IT・通信・インターネット]",
+      "price": "500,000円",
+      "deadline": "",
+      "category": "",
+      "applicants": "",
+      "url": "https://www.lancers.jp/work/detail/5539816",
+      "description": "業務のお困りごとを、AIとコードで解決するエンジニアです。 楽天株式会社でWebプロデューサー・ディレクターを7... もっと見る",
+      "price_yen": 500000
+    },
+    {
+      "platform": "CrowdWorks",
+      "search_keyword": "スクレイピング",
+      "title": "買取店のHP制作（WordPress想定）",
+      "price": "300,000円",
+      "deadline": "2026年05月22日",
+      "category": "WordPress制作・導入",
+      "applicants": "147人",
+      "url": "https://crowdworks.jp/public/jobs/13155527",
+      "description": "買取店のHP制作（WordPress想定） WordPress制作・導入の仕事の依頼 mitushiro (25件のレビュー) 本人確認済み 発注ルールチェック済み 仕事の概要 固定報酬制 300,0",
+      "price_yen": 300000
     }
   ]
 }
