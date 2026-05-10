@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+案件獲得パイプライン 毎朝7:00 自動実行用 launchd plist
+
+【インストール】
+  cp 02_claude/launchd/com.user.anken-pipeline.plist ~/Library/LaunchAgents/
+  launchctl load ~/Library/LaunchAgents/com.user.anken-pipeline.plist
+
+【アンインストール】
+  launchctl unload ~/Library/LaunchAgents/com.user.anken-pipeline.plist
+  rm ~/Library/LaunchAgents/com.user.anken-pipeline.plist
+
+【手動実行 (テスト)】
+  launchctl start com.user.anken-pipeline
+
+【ログ】
+  10_raw/launchd_pipeline.log (stdout)
+  10_raw/launchd_pipeline.err (stderr)
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.user.anken-pipeline</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/takumiyoshikawa/dev/anken-kakutoku/02_claude/scripts/run_daily.sh</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/takumiyoshikawa/dev/anken-kakutoku</string>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>7</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/Users/takumiyoshikawa/dev/anken-kakutoku/10_raw/launchd_pipeline.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/takumiyoshikawa/dev/anken-kakutoku/10_raw/launchd_pipeline.err</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

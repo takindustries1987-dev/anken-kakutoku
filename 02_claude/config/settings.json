@@ -1,0 +1,29 @@
+{
+  "_source": "Google Sheet 1LrLqdK_eudw6aND1umx-B203nOq7XFP2i9MkJuTkc0A",
+  "_note": "シート『設定』タブの内容を写したもの。シートを更新したらこのJSONも更新する（手動 or sync_settings_from_sheet で）",
+
+  "max_count": 5,
+  "intent": "AI・DX・業務改善寄りで探して",
+  "exclude_keywords": ["SEO", "デザイナー", "ライター"],
+  "min_price_yen": 500000,
+  "max_workload": "週2日",
+  "remote_required": true,
+
+  "platforms": {
+    "復業クラウド": true,
+    "Wantedly": true,
+    "SOKUDAN": true,
+    "Workship": true,
+    "ココナラ": true,
+    "ランサーズ": true,
+    "crowdworks": true,
+    "YOUTRUST": true
+  },
+
+  "mvp_platforms": ["ランサーズ", "crowdworks"],
+
+  "spreadsheet": {
+    "id": "1LrLqdK_eudw6aND1umx-B203nOq7XFP2i9MkJuTkc0A",
+    "candidates_gid": 994896138
+  }
+}
