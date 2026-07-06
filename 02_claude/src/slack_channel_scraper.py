@@ -122,7 +122,16 @@ def scrape_slack_channel(
             shutil.rmtree(copy_dest, ignore_errors=True)
         print(f"プロファイルをコピー中... → {copy_dest}")
         print("  （数分かかる場合があります）")
-        shutil.copytree(chrome_profile, str(copy_dest), dirs_exist_ok=True)
+        skip_files = {"SingletonLock", "SingletonSocket", "SingletonCookie",
+                       "RunningChromeVersion", "lockfile", "lock"}
+        def _ignore_lock(directory, files):
+            return [f for f in files if f in skip_files]
+        shutil.copytree(
+            chrome_profile, str(copy_dest),
+            ignore=_ignore_lock,
+            dirs_exist_ok=True,
+            copy_function=shutil.copy2,
+        )
         chrome_profile = str(copy_dest)
         print("  コピー完了")
 
