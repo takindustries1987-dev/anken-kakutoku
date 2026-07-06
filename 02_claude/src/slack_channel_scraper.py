@@ -1,9 +1,16 @@
 """
-Slack チャンネル情報取得（ブラウザCookie利用）
+Slack チャンネル情報取得（Playwright セッション保存方式）
 
 【使用方法】
-cd ~/Desktop/自己開発/案件獲得
-python3 02_claude/src/slack_channel_scraper.py --url "https://app.slack.com/client/T0A0MKVEWPL/C0A066XQXKR"
+cd ~/Desktop/anken-kakutoku
+
+# 初回: ブラウザが開くのでSlackにログイン → 自動保存される
+python3 02_claude/src/slack_channel_scraper.py \
+  --url "https://app.slack.com/client/T0A0MKVEWPL/C0A066XQXKR" --login
+
+# 2回目以降: 保存済みセッションで自動取得
+python3 02_claude/src/slack_channel_scraper.py \
+  --url "https://app.slack.com/client/T0A0MKVEWPL/C0A066XQXKR"
 
 オプション:
   --url URL          : SlackチャンネルのURL
@@ -11,91 +18,87 @@ python3 02_claude/src/slack_channel_scraper.py --url "https://app.slack.com/clie
   --json             : JSON形式で出力
   --max-scroll N     : スクロール回数（デフォルト: 10、増やすと過去メッセージも取得）
   --headless         : ヘッドレスモード（デフォルト: 画面表示あり）
-  --chrome-profile   : Chromeプロファイルパス（自動検出）
-  --auto-copy        : Chromeプロファイルを自動コピーして実行（Chrome起動中でもOK）
+  --login            : ログインモード（ブラウザが開くので手動ログイン → セッション保存）
 
 【処理内容】
-1. ログイン済みChromeのプロファイル（Cookie）を利用してSlackにアクセス
-2. 指定チャンネルのメッセージを取得
-3. テキストまたはJSON形式で保存
+1. --login: Playwrightブラウザでログイン → セッションを ~/.slack_scraper_session に保存
+2. 2回目以降: 保存済みセッションを使ってSlackにアクセス
+3. 指定チャンネルのメッセージを取得
 
 【注意】
 - 自分のアカウントでアクセスするためBot参加通知は出ない
-- 初回実行時はChromeを閉じた状態で実行（プロファイルロック回避）
-- macOS / Windows 両対応
+- 初回のみ --login でブラウザ上で手動ログインが必要（1回だけ）
+- Chromeが起動中でも問題なし（Chromeとは別のブラウザを使用）
+- macOS / Windows / Linux 対応
 
 【インプット】
 - SlackチャンネルURL
-- Chromeのログイン済みプロファイル（自動検出）
+- 保存済みセッション（~/.slack_scraper_session）
 
 【アウトプット】
 - 10_raw/slack_messages.txt（テキスト形式）
 - 10_raw/slack_messages.json（--json指定時）
+- 10_raw/slack_screenshot.png（スクリーンショット）
 """
 
 import sys
-import re
 import json
 import argparse
-import platform
 from pathlib import Path
 from datetime import datetime
 
 project_root = Path(__file__).parent.parent.parent
+SESSION_DIR = Path.home() / ".slack_scraper_session"
 
 
-def get_chrome_profile_path() -> str:
-    """OSに応じたChromeプロファイルパスを自動検出"""
-    system = platform.system()
+def login_and_save_session(url: str) -> bool:
+    """ブラウザを開いてSlackにログイン → セッション保存"""
+    from playwright.sync_api import sync_playwright
 
-    if system == "Darwin":  # macOS
-        base = Path.home() / "Library" / "Application Support" / "Google" / "Chrome"
-    elif system == "Windows":
-        base = Path.home() / "AppData" / "Local" / "Google" / "Chrome" / "User Data"
-    elif system == "Linux":
-        base = Path.home() / ".config" / "google-chrome"
-    else:
-        raise RuntimeError(f"未対応OS: {system}")
+    print("=" * 50)
+    print("【初回ログイン】")
+    print("ブラウザが開きます。Slackにログインしてください。")
+    print("ログイン完了後、ターミナルに戻ってEnterを押してください。")
+    print("=" * 50)
+    print()
 
-    if base.exists():
-        return str(base)
+    SESSION_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Chromium, Edge等のフォールバック
-    alternatives = []
-    if system == "Darwin":
-        alternatives = [
-            Path.home() / "Library" / "Application Support" / "Chromium",
-            Path.home() / "Library" / "Application Support" / "Microsoft Edge",
-        ]
-    elif system == "Windows":
-        alternatives = [
-            Path.home() / "AppData" / "Local" / "Chromium" / "User Data",
-            Path.home() / "AppData" / "Local" / "Microsoft" / "Edge" / "User Data",
-        ]
+    with sync_playwright() as p:
+        browser = p.chromium.launch_persistent_context(
+            user_data_dir=str(SESSION_DIR),
+            headless=False,
+            args=[
+                "--disable-blink-features=AutomationControlled",
+                "--no-first-run",
+                "--no-default-browser-check",
+            ],
+            viewport={"width": 1400, "height": 900},
+        )
 
-    for alt in alternatives:
-        if alt.exists():
-            print(f"  Chrome未検出、代替ブラウザ使用: {alt}")
-            return str(alt)
+        page = browser.pages[0] if browser.pages else browser.new_page()
+        page.goto(url, wait_until="domcontentloaded", timeout=60000)
 
-    raise FileNotFoundError(
-        f"Chromeプロファイルが見つかりません。\n"
-        f"探索先: {base}\n"
-        f"--chrome-profile でパスを手動指定してください"
-    )
+        print("ブラウザが開きました。")
+        print("→ Slackにログインしてください")
+        print("→ チャンネルが表示されたら、ここに戻ってEnterを押してください")
+        print()
+        input("Enterで続行（ログイン完了後）...")
 
+        # ログイン確認
+        page.wait_for_timeout(2000)
+        page_text = page.inner_text("body")
+        if "Sign in" in page_text or "サインイン" in page_text:
+            print("⚠ まだログインされていないようです")
+            print("  ブラウザでログインを完了してから、もう一度Enterを押してください")
+            input("Enterで続行...")
 
-def _remove_lock_files(profile_path: str):
-    """プロファイルのロックファイルを削除（コピー後に残る問題対策）"""
-    lock_files = ["SingletonLock", "SingletonSocket", "SingletonCookie"]
-    for lock in lock_files:
-        lock_path = Path(profile_path) / lock
-        if lock_path.exists():
-            try:
-                lock_path.unlink()
-                print(f"  ロックファイル削除: {lock}")
-            except Exception:
-                pass
+        browser.close()
+
+    print()
+    print(f"セッション保存完了: {SESSION_DIR}")
+    print("次回から --login なしで実行できます")
+    return True
 
 
 def scrape_slack_channel(
@@ -104,41 +107,17 @@ def scrape_slack_channel(
     as_json: bool = False,
     max_scroll: int = 10,
     headless: bool = False,
-    chrome_profile: str = None,
-    auto_copy_profile: bool = False,
 ) -> list:
-    """Slackチャンネルのメッセージを取得"""
-    import shutil
+    """保存済みセッションでSlackチャンネルのメッセージを取得"""
     from playwright.sync_api import sync_playwright
 
-    if not chrome_profile:
-        chrome_profile = get_chrome_profile_path()
+    if not SESSION_DIR.exists():
+        print("⚠ セッションが保存されていません")
+        print("  先に --login でログインしてください:")
+        print(f'  python3 02_claude/src/slack_channel_scraper.py --url "{url}" --login')
+        return []
 
-    # --auto-copy: プロファイルを自動コピーしてロック回避
-    if auto_copy_profile:
-        import tempfile
-        copy_dest = Path(tempfile.gettempdir()) / "chrome_slack_copy"
-        if copy_dest.exists():
-            shutil.rmtree(copy_dest, ignore_errors=True)
-        print(f"プロファイルをコピー中... → {copy_dest}")
-        print("  （数分かかる場合があります）")
-        skip_files = {"SingletonLock", "SingletonSocket", "SingletonCookie",
-                       "RunningChromeVersion", "lockfile", "lock"}
-        def _ignore_lock(directory, files):
-            return [f for f in files if f in skip_files]
-        shutil.copytree(
-            chrome_profile, str(copy_dest),
-            ignore=_ignore_lock,
-            dirs_exist_ok=True,
-            copy_function=shutil.copy2,
-        )
-        chrome_profile = str(copy_dest)
-        print("  コピー完了")
-
-    # ロックファイルを除去（コピー元のロックが残っている場合）
-    _remove_lock_files(chrome_profile)
-
-    print(f"Chromeプロファイル: {chrome_profile}")
+    print(f"セッション: {SESSION_DIR}")
     print(f"対象URL: {url}")
     print(f"ヘッドレス: {headless}")
     print()
@@ -147,14 +126,12 @@ def scrape_slack_channel(
 
     with sync_playwright() as p:
         browser = p.chromium.launch_persistent_context(
-            user_data_dir=chrome_profile,
+            user_data_dir=str(SESSION_DIR),
             headless=headless,
-            channel="chrome",
             args=[
                 "--disable-blink-features=AutomationControlled",
                 "--no-first-run",
                 "--no-default-browser-check",
-                "--profile-directory=Default",
             ],
             viewport={"width": 1400, "height": 900},
         )
@@ -168,8 +145,9 @@ def scrape_slack_channel(
         # ログイン確認
         page_text = page.inner_text("body")
         if "Sign in" in page_text or "サインイン" in page_text:
-            print("⚠ Slackにログインされていません")
-            print("  Chromeで先にSlackにログインしてから再実行してください")
+            print("⚠ セッションが期限切れです")
+            print("  --login で再ログインしてください:")
+            print(f'  python3 02_claude/src/slack_channel_scraper.py --url "{url}" --login')
             browser.close()
             return []
 
@@ -395,7 +373,7 @@ def scrape_slack_channel(
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Slack チャンネル情報取得（ブラウザCookie利用）"
+        description="Slack チャンネル情報取得（セッション保存方式）"
     )
     parser.add_argument(
         "--url",
@@ -424,22 +402,25 @@ def main():
         help="ヘッドレスモード",
     )
     parser.add_argument(
-        "--chrome-profile",
-        default=None,
-        help="Chromeプロファイルパス（自動検出）",
-    )
-    parser.add_argument(
-        "--auto-copy",
+        "--login",
         action="store_true",
-        help="Chromeプロファイルを自動コピーして実行（Chrome起動中でもOK）",
+        help="ログインモード（ブラウザが開くので手動ログイン → セッション保存）",
     )
 
     args = parser.parse_args()
 
     print("=" * 70)
-    print("Slack チャンネルスクレイパー（Cookie利用）")
+    print("Slack チャンネルスクレイパー（セッション保存方式）")
     print(f"実行日時: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 70)
+
+    if args.login:
+        login_and_save_session(args.url)
+        print()
+        print("続けてメッセージを取得しますか？")
+        answer = input("y/n: ").strip().lower()
+        if answer != "y":
+            return
 
     messages = scrape_slack_channel(
         url=args.url,
@@ -447,8 +428,6 @@ def main():
         as_json=args.json,
         max_scroll=args.max_scroll,
         headless=args.headless,
-        chrome_profile=args.chrome_profile,
-        auto_copy_profile=args.auto_copy,
     )
 
     if messages:
@@ -457,7 +436,6 @@ def main():
         print(f"{'=' * 70}")
     else:
         print("\nメッセージを取得できませんでした")
-        print("Chromeで先にSlackにログインしてから再実行してください")
 
 
 if __name__ == "__main__":
