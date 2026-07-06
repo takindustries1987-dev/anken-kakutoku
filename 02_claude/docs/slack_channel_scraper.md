@@ -34,11 +34,17 @@ python3 02_claude/src/slack_channel_scraper.py \
 python3 02_claude/src/slack_channel_scraper.py \
   --url "https://app.slack.com/client/T0A0MKVEWPL/C0A066XQXKR" \
   --headless
+
+# Chrome起動中でも実行（プロファイル自動コピー）
+python3 02_claude/src/slack_channel_scraper.py \
+  --url "https://app.slack.com/client/T0A0MKVEWPL/C0A066XQXKR" \
+  --auto-copy
 ```
 
 ## 前提条件
 - Chromeで対象のSlackワークスペースにログイン済みであること
 - 初回実行時はChromeを閉じた状態で実行（プロファイルロック回避）
+- もしくは `--auto-copy` でプロファイル自動コピー（Chrome起動中でもOK）
 - `pip install playwright && playwright install chrome`
 
 ## 主要関数
@@ -46,9 +52,11 @@ python3 02_claude/src/slack_channel_scraper.py \
 | 関数名 | 説明 |
 |---|---|
 | `get_chrome_profile_path()` | OS別にChromeプロファイルパスを自動検出 |
+| `_remove_lock_files(path)` | コピー後に残るロックファイルを自動削除 |
 | `scrape_slack_channel(...)` | Slackチャンネルのメッセージを取得 |
 
 ## 注意事項
 - 自分のアカウントとしてアクセスするためBot参加通知は出ない
 - Chromeが起動中だとプロファイルがロックされるため、Chromeを閉じてから実行
+- もしくは `--auto-copy` でプロファイルを自動コピーして実行（Chrome起動中でもOK）
 - もしくは `--chrome-profile` で別プロファイルを指定

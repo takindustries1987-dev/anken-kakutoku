@@ -12,6 +12,7 @@ python3 02_claude/src/slack_channel_scraper.py --url "https://app.slack.com/clie
   --max-scroll N     : スクロール回数（デフォルト: 10、増やすと過去メッセージも取得）
   --headless         : ヘッドレスモード（デフォルト: 画面表示あり）
   --chrome-profile   : Chromeプロファイルパス（自動検出）
+  --auto-copy        : Chromeプロファイルを自動コピーして実行（Chrome起動中でもOK）
 
 【処理内容】
 1. ログイン済みChromeのプロファイル（Cookie）を利用してSlackにアクセス
@@ -84,6 +85,19 @@ def get_chrome_profile_path() -> str:
     )
 
 
+def _remove_lock_files(profile_path: str):
+    """プロファイルのロックファイルを削除（コピー後に残る問題対策）"""
+    lock_files = ["SingletonLock", "SingletonSocket", "SingletonCookie"]
+    for lock in lock_files:
+        lock_path = Path(profile_path) / lock
+        if lock_path.exists():
+            try:
+                lock_path.unlink()
+                print(f"  ロックファイル削除: {lock}")
+            except Exception:
+                pass
+
+
 def scrape_slack_channel(
     url: str,
     output_path: str,
@@ -91,12 +105,29 @@ def scrape_slack_channel(
     max_scroll: int = 10,
     headless: bool = False,
     chrome_profile: str = None,
+    auto_copy_profile: bool = False,
 ) -> list:
     """Slackチャンネルのメッセージを取得"""
+    import shutil
     from playwright.sync_api import sync_playwright
 
     if not chrome_profile:
         chrome_profile = get_chrome_profile_path()
+
+    # --auto-copy: プロファイルを自動コピーしてロック回避
+    if auto_copy_profile:
+        import tempfile
+        copy_dest = Path(tempfile.gettempdir()) / "chrome_slack_copy"
+        if copy_dest.exists():
+            shutil.rmtree(copy_dest, ignore_errors=True)
+        print(f"プロファイルをコピー中... → {copy_dest}")
+        print("  （数分かかる場合があります）")
+        shutil.copytree(chrome_profile, str(copy_dest), dirs_exist_ok=True)
+        chrome_profile = str(copy_dest)
+        print("  コピー完了")
+
+    # ロックファイルを除去（コピー元のロックが残っている場合）
+    _remove_lock_files(chrome_profile)
 
     print(f"Chromeプロファイル: {chrome_profile}")
     print(f"対象URL: {url}")
@@ -106,8 +137,6 @@ def scrape_slack_channel(
     messages = []
 
     with sync_playwright() as p:
-        # Chromeのプロファイルを使ってブラウザ起動
-        # channel=chrome でChrome自体を使用（Chromiumではなく）
         browser = p.chromium.launch_persistent_context(
             user_data_dir=chrome_profile,
             headless=headless,
@@ -390,6 +419,11 @@ def main():
         default=None,
         help="Chromeプロファイルパス（自動検出）",
     )
+    parser.add_argument(
+        "--auto-copy",
+        action="store_true",
+        help="Chromeプロファイルを自動コピーして実行（Chrome起動中でもOK）",
+    )
 
     args = parser.parse_args()
 
@@ -405,6 +439,7 @@ def main():
         max_scroll=args.max_scroll,
         headless=args.headless,
         chrome_profile=args.chrome_profile,
+        auto_copy_profile=args.auto_copy,
     )
 
     if messages:
