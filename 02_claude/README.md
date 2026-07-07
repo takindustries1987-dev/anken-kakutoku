@@ -13,11 +13,19 @@
 │   ├── scrape_single_delivery.py   # 3PF統合 単発案件スクレイピング
 │   ├── coconala_analysis.py        # ココナラ成功者分析
 │   ├── daily_job_scraper.py        # 毎日の新着・急募案件スクレイピング ★メイン
-│   └── lancers_deadline_checker.py # ランサーズ締切チェック＆案件一覧まとめ ★NEW
+│   ├── lancers_deadline_checker.py # ランサーズ締切チェック＆案件一覧まとめ
+│   ├── slack_channel_scraper.py    # Slackチャンネル情報取得（ブラウザCookie利用）
+│   ├── scrape_extended_platforms.py # 複業クラウド/Workship/menta/フリーランススタート/サンカク ★NEW
+│   └── aggregate_market_data.py    # 全プラットフォームCSVを統一・直近Nヶ月に絞込 ★NEW
 ├── docs/                  ← ドキュメント（srcと1対1対応 + 手順書）
 │   ├── scrape_multi_category.md
 │   ├── daily_job_scraper.md
 │   ├── lancers_deadline_checker.md
+│   ├── slack_channel_scraper.md
+│   ├── scrape_extended_platforms.md    # ★NEW
+│   ├── aggregate_market_data.md        # ★NEW
+│   ├── market_public_stats.md          # ★NEW 自動収集対象外5PFの公開統計まとめ
+│   ├── skill_learning_plan.md          # ★NEW 市場分析に基づく学習ロードマップ
 │   ├── gas_automation_sample.md
 │   ├── scraping_tool_sample.md
 │   ├── chatgpt_api_demo.md
@@ -83,6 +91,34 @@ python3 02_claude/src/lancers_deadline_checker.py --enrich
 python3 02_claude/src/lancers_deadline_checker.py --min-price 50000
 ```
 
+### 7. Slackチャンネル情報取得（セッション保存方式）
+```bash
+# 初回: ブラウザが開くのでSlackにログイン→セッション保存
+python3 02_claude/src/slack_channel_scraper.py --url "https://app.slack.com/client/xxx/xxx" --login
+
+# 2回目以降: 保存済みセッションで自動取得
+python3 02_claude/src/slack_channel_scraper.py --url "https://app.slack.com/client/xxx/xxx"
+```
+
+### 8. 拡張プラットフォームの案件取得（複業クラウド/Workship/menta/フリーランススタート/サンカク）
+```bash
+# 1プラットフォームのみ
+python3 02_claude/src/scrape_extended_platforms.py --platform fukugyo_cloud
+
+# 全プラットフォーム一括
+python3 02_claude/src/scrape_extended_platforms.py --platform all
+```
+Wantedly/YOUTRUST/LinkedIn/SOKUDANは利用規約で自動収集を明示的に禁止しているため対象外。
+コンパスシェア(ConPath)は案件一覧が非公開のため対象外（`docs/market_public_stats.md`参照）。
+
+### 9. マーケットデータ統合・3ヶ月フィルタ
+```bash
+# CW/ランサーズ/ココナラ + 拡張プラットフォームを統合し直近3ヶ月分に絞込
+python3 02_claude/src/aggregate_market_data.py
+```
+実行前に対象CSVが最新（直近3ヶ月以内）であることを確認すること。古いCSVしかない場合は
+上記1〜6・8のスクレイパーを再実行してから統合する。
+
 ## 出力先
 
 | ファイル | 内容 |
@@ -100,6 +136,10 @@ python3 02_claude/src/lancers_deadline_checker.py --min-price 50000
 | `10_raw/all_recommended_single.csv` | 3PF統合推奨 |
 | `10_raw/coconala_top_sellers.csv` | ココナラ売れ筋 |
 | `10_raw/coconala_analysis_report.txt` | ココナラ分析レポート |
+| `10_raw/slack_messages.txt` / `.json` | Slackチャンネル取得メッセージ |
+| `10_raw/fukugyo_cloud_jobs.csv` / `workship_jobs.csv` / `menta_jobs.csv` / `freelance_start_jobs.csv` / `sankaku_jobs.csv` | 拡張プラットフォーム案件 |
+| `10_raw/market_unified.csv` | 全プラットフォーム統合・直近3ヶ月分 |
+| `10_raw/market_stale_report.txt` | 統合時の期間内/期間外件数レポート |
 
 ## 依存パッケージ
 ```bash
@@ -136,6 +176,21 @@ CrowdWorks・ココナラ・ランサーズの登録〜出金設定までの全�
 01_profileの性格プロファイルを活用した案件獲得の全フロー。
 プロフィール作成→出品/応募→案件進行→納品→出金まで。
 性格プロファイルに基づく「落とし穴チェックリスト」付き。
+
+## 14プラットフォーム市場分析（2026-07）
+
+複業クラウド/Wantedly/SOKUDAN/Workship/ココナラ/ランサーズ/CrowdWorks/YOUTRUST/LinkedIn/menta/
+フリーランススタート/サンカク/コンパスシェア/ConPathを対象に、直近3ヶ月の案件傾向とポジショニングを
+分析した。
+
+- **自動収集可能**（8/6〜9の手順で取得）: CrowdWorks・ランサーズ・ココナラ・複業クラウド・
+  Workship・menta・フリーランススタート・サンカク
+- **利用規約で自動収集を明示的に禁止・または非公開**: Wantedly・YOUTRUST・LinkedIn・SOKUDAN・
+  コンパスシェア(ConPath) → `docs/market_public_stats.md`の公開統計のみ利用
+- ポジショニングマップ: 単価水準×参入難易度の散布図（Artifactとして別途共有）
+- 学習プラン: `docs/skill_learning_plan.md`（01_profileの強み分析×市場分析から4フェーズで整理）
+
+詳細な調査経緯・未解決事項は `CLAUDE_ISSUE.md` を参照。
 
 ## 3週間のワークフロー
 
