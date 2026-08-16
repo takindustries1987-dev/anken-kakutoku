@@ -1,0 +1,13 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+data/state.json
+data/orders/
+data/readings/
+data/logs/
+e2e/results/*.txt
+e2e/screenshots/*.png
+!e2e/results/.gitkeep
+!e2e/screenshots/.gitkeep
+.DS_Store
