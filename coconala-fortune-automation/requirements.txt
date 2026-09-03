@@ -1,0 +1,4 @@
+anthropic>=0.40.0
+python-dotenv>=1.0.0
+# ブラウザ自動操作(coconala_client.py の実装時に使用予定。現時点では未使用)
+playwright>=1.45.0
